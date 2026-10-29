@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: quickmend_postgres
+    environment:
+      POSTGRES_USER: quickmend_user
+      POSTGRES_PASSWORD: quickmend_pass
+      POSTGRES_DB: quickmend_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: quickmend_backend
+    environment:
+      DATABASE_URL: postgresql://quickmend_user:quickmend_pass@postgres:5432/quickmend_db
+      JWT_SECRET: quickmend-super-secret-jwt-key-2026
+      SECRET_KEY: quickmend-flask-secret-key-2026
+      PORT: 5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: quickmend_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
